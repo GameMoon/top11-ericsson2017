@@ -9,7 +9,7 @@
 
 
 struct Bugfix {
-    bugs @0 : UInt8;
+    bugs @0 : Int8;
     message @1 : Text;
 }
 
