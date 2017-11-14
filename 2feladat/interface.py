@@ -35,3 +35,17 @@ class CommunicationInterface:
         login.hash = "dp751bhpaaybmccx013r05r5ys084muj"
         self.send(command)
 
+    def send_command(self, moves):
+        command = self.command_capnp.Command.new_message()
+        moves_list = command.commands.init('moves', len(moves))
+        for i in range(len(moves)):
+            moves_list[i] = moves[i]
+        self.send(command)
+
+    def new_move(self, unit_id, direction):
+        new_move = self.command_capnp.Move.new_message()
+        new_move.unit = unit_id
+        new_move.direction = direction
+        return new_move
+
+

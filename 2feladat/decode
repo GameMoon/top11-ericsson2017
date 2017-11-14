@@ -1,0 +1,15 @@
+-2 : blokkolt mezők
+-1 : elfoglalt mező
+0: üres
+1: enemy
+
+2: az első egység
+3: 1 hp
+4: 2 hp
+5: 3 hp
+
+6
+7
+8
+9
+
