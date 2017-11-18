@@ -38,13 +38,25 @@ class OutputGenerator:
 
         for index in range(len(output)):
 
-            row[tempindex] = output[index]
+            row[tempindex] = self.number2char(output[index])
 
             if tempindex == 99:
-                print(row)
+                print("".join(row))
                 tempindex = 0
             else:
                 tempindex = tempindex + 1
+
+    def number2char(self, num):
+        char = str(num)
+        if num == 0:  # Attackable field
+            char = " "
+        elif num == -1:  # Our fields
+            char = "#"
+        elif num == 1:   # Enemies
+            char = "x"
+        elif num == 5:  # We for now it's 5
+            char = "o"
+        return char
 
     def create_image(self, output,tick):
         image_array = [None]*len(output)
