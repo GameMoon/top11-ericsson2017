@@ -236,9 +236,15 @@ class TestEnvironment:
                self.units[new_cell.attack.unit].position = self.units[new_cell.attack.unit].startpos
                self.units[new_cell.attack.unit].health -= 1
 
+    def move_units(self, directions):
+        which_unit = 0
+        for dir in directions:
+            self.move_unit(self.units[which_unit], dir)
+            which_unit += 1
 
-    def move_units(self):
-        pass
+    def move_unit(self, unit, direction):
+        unit.position.x = unit.position.x + direction.x
+        unit.position.y = unit.position.y + direction.y
 
     def receive(self):
         response = Response()

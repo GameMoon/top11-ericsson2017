@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from interface import CommunicationInterface
 from converter import OutputGenerator
 from test_env import TestEnvironment
@@ -22,6 +23,7 @@ for i in range(1000):
     response = test_env.receive()
     stateVector = generator.convert(response.cells, response.units, response.enemies)
     generator.show(stateVector)
+    test_env.move_units([Position(1, 0)])
     test_env.update()
 #print(str(response.units[0].position.x)+" | "+str(response.units[0].position.y)+" | "+str(response.units[0].direction) + " | "+ str(response.units[0].health))
 #print(str(response.enemies[0].position.x)+" | "+str(response.enemies[0].position.y)+" | "+str(response.enemies[0].direction))
