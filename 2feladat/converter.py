@@ -2,7 +2,8 @@ from PIL import Image
 
 class OutputGenerator:
 
-    def convert(self, cells, units, enemies):
+    @staticmethod
+    def convert(cells, units, enemies):
         output = [-2]*80*100 # vector with 80*100 size
 
         for x in range(len(cells)):
@@ -32,13 +33,14 @@ class OutputGenerator:
 
         return output
 
-    def show(self, output):
+    @staticmethod
+    def show(output):
         row = [None]*100
         tempindex = 0
 
         for index in range(len(output)):
 
-            row[tempindex] = self.number2char(output[index])
+            row[tempindex] = OutputGenerator.number2char(output[index])
 
             if tempindex == 99:
                 print("".join(row))
@@ -46,7 +48,8 @@ class OutputGenerator:
             else:
                 tempindex = tempindex + 1
 
-    def number2char(self, num):
+    @staticmethod
+    def number2char(num):
         char = str(num)
         if num == 0:  # Attackable field
             char = " "

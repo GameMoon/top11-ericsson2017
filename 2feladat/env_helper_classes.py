@@ -1,11 +1,3 @@
-from enum import Enum
-
-class Direction(Enum):
-    down: 0
-    up: 1
-    left: 2
-    right: 3
-
 class Position:
     x = 0
     y = 0
@@ -25,22 +17,35 @@ class Cell:
     def __init__(self):
         self.attack = Attack()
 
+class EnemyDir:
+    vertical: ""
+    horizontal: ""
+
 class Enemy:
-    position = Position
-    direction = {'vertical': "", 'horizontal': ""}
+    position = None
+    direction = None
+
+    def __init__(self):
+        self.position = Position()
+        self.direction = EnemyDir()
 
 class Unit:
     owner = 0
-    startpos = Position
-    position = Position
+    startpos = None
+    position = None
     direction = ""
     health = 3
     killer = 6
+
+    def __init__(self):
+        self.position = Position()
+        self.startpos = Position()
 
 class Info:
     owns = 1
     level = 0
     tick = 0
+
 class Response:
     status = "status"
     info = Info
