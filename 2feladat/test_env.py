@@ -24,7 +24,7 @@ class TestEnvironment:
         for x in range(len(self.cells)):
             for y in range(len(self.cells[x])):
                 self.cells[x][y] = Cell()
-                if x == 0 or y == 0 or x == 79 or y == 99:
+                if x <= 1 or y <= 1 or x >= 78 or y >= 98:
                     self.cells[x][y].owner = self.owns
 
                 else:
@@ -105,7 +105,7 @@ class TestEnvironment:
         new_pos.y = y
         return new_pos
 
-    def get_random_unit_dir(self,position):
+    def get_random_unit_dir(self, position):
         possible_dirs = ['up', 'down', 'right', 'left']
         if position.x == 0:
             possible_dirs.remove("up")
@@ -118,7 +118,7 @@ class TestEnvironment:
         random_dir = random.randint(0, len(possible_dirs)-1)
         return possible_dirs[random_dir]
 
-    def get_random_enemy_dir(self,position):
+    def get_random_enemy_dir(self, position):
         vertical_dir = ['up', 'down']
         horizontal_dir = ['left', 'right']
         if position.x == 0:
@@ -143,77 +143,92 @@ class TestEnvironment:
             self.units.append(new_unit)
 
     def generate_enemies(self):
-
         for i in range(self.level+1-int(self.level/500)*480):
             new_enemy = Enemy()
             new_enemy.position = self.get_free_enemy_position()
             dirs = self.get_random_enemy_dir(new_enemy.position)
-            new_enemy.direction['vertical'] = dirs[0]
-            new_enemy.direction['horizontal'] = dirs[1]
+            new_enemy.direction.vertical = dirs[0]
+            new_enemy.direction.horizontal = dirs[1]
             self.enemies.append(new_enemy)
+
+    def reverse_direction(self, direction):
+        if direction == 'up':
+            return 'down'
+        elif direction == 'down':
+            return 'up'
+        elif direction == 'right':
+            return 'left'
+        elif direction == 'left':
+            return 'right'
 
     def move_enemies(self):
         for enemyIndex in range(len(self.enemies)):
             vertical_speed = 0
-            if self.enemies[enemyIndex].direction['vertical'] == 'down': vertical_speed = -1
-            elif self.enemies[enemyIndex].direction['vertical'] == 'up': vertical_speed = 1
+            if self.enemies[enemyIndex].direction.vertical == 'down': vertical_speed = -1
+            elif self.enemies[enemyIndex].direction.vertical == 'up': vertical_speed = 1
 
             horizontal_speed = 0
-            if self.enemies[enemyIndex].direction['horizontal'] == 'left': horizontal_speed = -1
-            elif self.enemies[enemyIndex].direction['horizontal'] == 'right': horizontal_speed = 1
+            if self.enemies[enemyIndex].direction.horizontal == 'left': horizontal_speed = -1
+            elif self.enemies[enemyIndex].direction.horizontal == 'right': horizontal_speed = 1
 
             new_x_pos = self.enemies[enemyIndex].position.x+horizontal_speed
             new_y_pos = self.enemies[enemyIndex].position.y+vertical_speed
 
-            # nincs ütközés
-            if self.cells[new_x_pos][new_y_pos].owner == 0:
-                self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x+horizontal_speed
-                self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y+vertical_speed
-            else:
+            # if collision occur
+            if self.cells[new_x_pos][new_y_pos].owner != 0:
+
                 possible_actions = ['back', 'left', 'right']
-                if new_x_pos-2*horizontal_speed in range(79) and self.cells[new_x_pos-2*horizontal_speed][new_y_pos].owner != 0:
+
+                # Free escape positions
+                free_x_pos = new_x_pos-2*horizontal_speed
+                free_y_pos = new_y_pos-2*vertical_speed
+
+                left_cell = self.cells[free_x_pos][new_y_pos]
+                right_cell = self.cells[new_x_pos][free_y_pos]
+
+                back_cell = self.cells[free_x_pos][free_y_pos]
+
+                # Normal escape possibilities
+                if free_x_pos in range(79) and left_cell.owner != 0:
                     possible_actions.remove("left")
-                if new_y_pos-2*vertical_speed in range(99) and self.cells[new_x_pos ][new_y_pos-2*vertical_speed].owner != 0:
+                if free_y_pos in range(99) and right_cell.owner != 0:
                     possible_actions.remove("right")
-                if new_y_pos-2*vertical_speed in range(99) and new_x_pos-2*horizontal_speed in range(79) and self.cells[new_x_pos-2*horizontal_speed][new_y_pos - 2 * vertical_speed].owner != 0:
+                if free_y_pos in range(99) and free_x_pos in range(79) and back_cell.owner != 0:
                     possible_actions.remove("back")
 
+                # Strange escape possibilities
                 if len(possible_actions) == 0:
-                    if new_x_pos-2*horizontal_speed in range(79) and self.cells[new_x_pos - 1 * horizontal_speed][new_y_pos].owner != 0:
+                    if free_x_pos in range(79) and self.cells[new_x_pos - 1 * horizontal_speed][new_y_pos].owner != 0:
                         possible_actions.append("back-left")
-                    if new_y_pos-2*vertical_speed in range(99) and self.cells[new_x_pos][new_y_pos - 1 * vertical_speed].owner != 0:
+                    if free_y_pos in range(99) and self.cells[new_x_pos][new_y_pos - 1 * vertical_speed].owner != 0:
                         possible_actions.append("back-right")
 
+                # If no escape random direction
                 if len(possible_actions) == 0:
-                    pass
-                else:
-                    r_action = random.randint(0, len(possible_actions) - 1)
-                    if possible_actions[r_action] == 'left':
-                        horizontal_speed = horizontal_speed*-1
-                        if self.enemies[enemyIndex].direction['horizontal'] == 'left':
-                            self.enemies[enemyIndex].direction['horizontal'] = 'right'
-                        else:
-                            self.enemies[enemyIndex].direction['horizontal'] = 'left'
-                    if possible_actions[r_action] == 'right':
-                        vertical_speed = vertical_speed*-1
-                        if self.enemies[enemyIndex].direction['vertical'] == 'up':
-                            self.enemies[enemyIndex].direction['vertical'] = 'down'
-                        else:
-                            self.enemies[enemyIndex].direction['vertical'] = 'up'
-                    if possible_actions[r_action] == 'back':
-                        horizontal_speed = horizontal_speed*-1
-                        vertical_speed = vertical_speed * -1
-                        if self.enemies[enemyIndex].direction['horizontal'] == 'left':
-                            self.enemies[enemyIndex].direction['horizontal'] = 'right'
-                        else:
-                            self.enemies[enemyIndex].direction['horizontal'] = 'left'
-                        if self.enemies[enemyIndex].direction['vertical'] == 'up':
-                            self.enemies[enemyIndex].direction['vertical'] = 'down'
-                        else:
-                            self.enemies[enemyIndex].direction['vertical'] = 'up'
+                    possible_actions = ['back', 'left', 'right']
 
-                self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x + horizontal_speed
-                self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y + vertical_speed
+                r_action = random.randint(0, len(possible_actions) - 1)
+
+                current_h_dir = self.enemies[enemyIndex].direction.horizontal
+                current_v_dir = self.enemies[enemyIndex].direction.vertical
+
+                if possible_actions[r_action] == 'left' or possible_actions[r_action] == 'back-left':
+                    horizontal_speed *= -1
+                    self.enemies[enemyIndex].direction.horizontal = self.reverse_direction(current_h_dir)
+
+                if possible_actions[r_action] == 'right' or possible_actions[r_action] == 'back-right':
+                    vertical_speed *= -1
+                    self.enemies[enemyIndex].direction.vertical = self.reverse_direction(current_v_dir)
+
+                if possible_actions[r_action] == 'back':
+                    horizontal_speed *= -1
+                    vertical_speed *= -1
+                    self.enemies[enemyIndex].direction.horizontal = self.reverse_direction(current_h_dir)
+                    self.enemies[enemyIndex].direction.vertical = self.reverse_direction(current_v_dir)
+
+            # update enemy position
+            self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x + horizontal_speed
+            self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y + vertical_speed
 
     def move_units(self, directions):
         which_unit = 0
