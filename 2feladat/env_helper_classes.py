@@ -1,14 +1,18 @@
 from enum import Enum
 
 class Direction(Enum):
-    down: 0
-    up: 1
-    left: 2
-    right: 3
+    down= 0
+    up= 1
+    left= 2
+    right= 3
 
 class Position:
     x = 0
     y = 0
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 class Attack:
     can = True

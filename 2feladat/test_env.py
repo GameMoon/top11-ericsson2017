@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from env_helper_classes import *
 import random
 
@@ -214,8 +215,15 @@ class TestEnvironment:
                 self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x + horizontal_speed
                 self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y + vertical_speed
 
-    def move_units(self):
-        pass
+    def move_units(self, directions):
+        which_unit = 0
+        for dir in directions:
+            self.move_unit(self.units[which_unit], dir)
+            which_unit += 1
+
+    def move_unit(self, unit, direction):
+        unit.position.x = unit.position.x + direction.x
+        unit.position.y = unit.position.y + direction.y
 
     def receive(self):
         response = Response()
