@@ -2,7 +2,7 @@ class Position:
     x = 0
     y = 0
 
-    def __init__(self, x, y):
+    def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
 
@@ -40,6 +40,8 @@ class Unit:
     direction = ""
     health = 3
     killer = 6
+    is_conquering = False
+    conquer_trail = []
 
     def __init__(self):
         self.position = Position()
