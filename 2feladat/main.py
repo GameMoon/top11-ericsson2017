@@ -11,16 +11,17 @@ generator = OutputGenerator()
 # teszt környezet
 test_env = TestEnvironment()
 
+#interface.login()
 
 #test_env.send([interface.new_move(0, 'right')])
 #interface.login()
 
-#response = interface.receive()
+
 
 for i in range(100):
     response = test_env.receive()
     stateVector = generator.convert(response.cells, response.units, response.enemies)
-    generator.create_image(stateVector, response.info.tick)
+    generator.show(stateVector)
     test_env.update()
 #print(str(response.units[0].position.x)+" | "+str(response.units[0].position.y)+" | "+str(response.units[0].direction) + " | "+ str(response.units[0].health))
 #print(str(response.enemies[0].position.x)+" | "+str(response.enemies[0].position.y)+" | "+str(response.enemies[0].direction))
@@ -42,6 +43,3 @@ for i in range(100):
 #     interface.send_command([interface.new_move(0, 'down')])
 #     output = generator.convert(response.cells, response.units, response.enemies)
 #     #generator.create_image(output,response.info.tick)
-
-
-
