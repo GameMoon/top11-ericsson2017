@@ -138,7 +138,8 @@ class TestEnvironment:
             new_unit.owner = 1
             new_unit.position = self.get_free_unit_position()
             new_unit.direction = self.get_random_unit_dir(new_unit.position)
-            new_unit.startpos = new_unit.position
+            new_unit.startpos.x = new_unit.position.x
+            new_unit.startpos.y = new_unit.position.y
             self.units.append(new_unit)
 
     def generate_enemies(self):
@@ -255,16 +256,16 @@ class TestEnvironment:
         for enemy in self.enemies:
             enemy_cell = self.cells[enemy.position.x][enemy.position.y]
             # enemy collied with unit capturing line
-            if enemy.owner == 0 and enemy_cell.attack.which() == "unit":
+            if enemy_cell.owner == 0 and enemy_cell.attack.which() == "unit":
                 self.damage_unit(enemy_cell.attack.unit)
 
             # enemy collied with unit
-            for unit_index in range(self.units):
+            for unit_index in range(len(self.units)):
                 if self.units[unit_index].position.x == enemy.position.x and self.units[unit_index].position.y == enemy.position.y:
                     self.damage_unit(unit_index)
 
 
-        for unit_index in range(self.units):
+        for unit_index in range(len(self.units)):
 
             # unit out of the map
             if not self.units[unit_index].position.x in range(79) or not self.units[unit_index].position.x in range(99):
@@ -272,14 +273,16 @@ class TestEnvironment:
                 continue
 
             # unit collied with own capturing line
-            unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].posititon.y]
+            unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].position.y]
             if unit_cell.attack.which() == "unit" and unit_cell.attack.unit == unit_index:
                 self.damage_unit(unit_index)
 
-
     def damage_unit(self, unit_index):
-        self.units[unit_index].position = self.units[unit_index].startpos
-        self.units[unit_index].health -= 1
+        self.units[unit_index].position.x = self.units[unit_index].startpos.x
+        self.units[unit_index].position.y = self.units[unit_index].startpos.y
+
+        if self.units[unit_index].health > 0:
+            self.units[unit_index].health -= 1
 
     def update_cells(self):
         pass
