@@ -1,4 +1,4 @@
-#from PIL import Image
+from PIL import Image
 
 class OutputGenerator:
 
@@ -63,6 +63,6 @@ class OutputGenerator:
             else:
                 image_array[index] = (0, 255, 0)
 
-        #img = Image.new('RGB', (100, 80))
-        #img.putdata(image_array)
-        #img.save('images/output_'+str(tick)+'.png')
+        img = Image.new('RGB', (100, 80))
+        img.putdata(image_array)
+        img.save('images/output_'+str(tick)+'.png')
