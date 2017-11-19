@@ -2,6 +2,7 @@
 from env_helper_classes import *
 import random
 from copy import deepcopy
+import sys
 
 class TestEnvironment:
     cells = []*80
@@ -12,12 +13,14 @@ class TestEnvironment:
     enemies = [Enemy]
 
     def  __init__(self):
-        self.init(-1)
+        self.init(0)
 
     def init(self, level):
         self.tick = 0
         self.owns = 1
         self.cells = [None]*80
+
+        sys.setrecursionlimit(1000000)
 
         for x in range(len(self.cells)):
             self.cells[x] = [Cell]*100
@@ -32,7 +35,7 @@ class TestEnvironment:
                     self.cells[x][y].owner = 0
                 self.cells[x][y].attack.can = True
 
-        self.level = level + 1
+        self.level = level
         self.units = []
         self.enemies = []
         self.generate_units()
@@ -232,21 +235,36 @@ class TestEnvironment:
             self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x + horizontal_speed
             self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y + vertical_speed
 
-    def move_units(self, directions):
-        which_unit = 0
-        for dir in directions:
-            self.move_unit(self.units[which_unit], dir)
-            which_unit += 1
+    def move_units(self, unit_dirs):
+
+        for dir in unit_dirs:
+            unit_dir = Position()
+
+            if dir[1] == 'up':
+                unit_dir.x = -1
+            elif dir[1] == 'down':
+                unit_dir.x = 1
+
+            if dir[1] == 'right':
+                unit_dir.y = 1
+            elif dir[1] == 'left':
+                unit_dir.y = -1
+
+        self.move_unit(self.units[dir[0]], unit_dir)
 
     def move_unit(self, unit, direction):
         if unit.health > 0:
-            if (self.cells[unit.position.x][unit.position.y].owner == unit.owner and  # Own field
-               self.cells[unit.position.x + direction.x][unit.position.y + direction.y].owner == 0 and  # Empty
-               self.cells[unit.position.x + direction.x][unit.position.y + direction.y].attack.can):  # Attackable field
-                unit.is_conquering = True
+            print("Direction: ", direction.x, direction.y)
+            print(unit.position.x + direction.x, unit.position.y + direction.y)
+            if (unit.position.x + direction.x) in range(100) and (unit.position.y + direction.y) in range(80):  # TODO: this should be somewhere else
+                print(unit.position.x, unit.position.y)
+                if (self.cells[unit.position.x][unit.position.y].owner == self.owns and  # Own field TODO: self.owns -> unit.owner
+                   #self.cells[unit.position.x + direction.x][unit.position.y + direction.y].owner == 0 # Empty
+                   self.cells[unit.position.x + direction.x][unit.position.y + direction.y].attack.can):  # Attackable field
+                    unit.is_conquering = True
 
             if (unit.is_conquering and  # We are conquering this field
-               self.cells[unit.position.x][unit.position.y].owner == unit.owner):  # Own field
+               self.cells[unit.position.x + direction.x][unit.position.y + direction.y].owner == unit.owner):  # Own field
                 self.conquering_done(unit)
                 unit.is_conquering = False
 
@@ -254,43 +272,50 @@ class TestEnvironment:
             unit.position.y = unit.position.y + direction.y
 
             if unit.is_conquering:
-                self.cells[unit.position.x][unit.position.y].attack.unit = unit.owner
-                unit.conquer_trail.append(unit.position)  # Húzza a támadócsíkot
+                self.cells[unit.position.x][unit.position.y].attack.unit = self.units.index(unit)  # TODO: set unit index
+                # self.cells[unit.position.x][unit.position.y].attack.can = False  # TODO: kell ez?
+                conquered_cell_pos = Position(unit.position.x, unit.position.y)
+                unit.conquer_trail.append(conquered_cell_pos)  # Húzza a támadócsíkot
 
     def conquering_done(self, unit):
         for pos in unit.conquer_trail:  # Sets the trail to be our fields
-            self.cells[pos.x][pos.y].owner = unit.owner
+            self.cells[pos.x][pos.y].__init__()
+            self.cells[pos.x][pos.y].owner = self.owns
+            self.cells[pos.x][pos.y].attack.unit = -1
 
         while len(unit.conquer_trail) > 0:
             pos = unit.conquer_trail.pop()
 
             # Try to fill neighbors
             tmp_cells = deepcopy(self.cells)
-            if try_to_fill_area(tmp_cells, unit, Position(pos.x+1, pos.y)) != -1:
+            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x+1, pos.y)) != -1:
                 self.cells = tmp_cells
             tmp_cells = deepcopy(self.cells)
-            if try_to_fill_area(tmp_cells, unit, Position(pos.x-1, pos.y)) != -1:
+            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x-1, pos.y)) != -1:
                 self.cells = tmp_cells
             tmp_cells = deepcopy(self.cells)
-            if try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y+1)) != -1:
+            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y+1)) != -1:
                 self.cells = tmp_cells
             tmp_cells = deepcopy(self.cells)
-            if try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y-1)) != -1:
+            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y-1)) != -1:
                 self.cells = tmp_cells
 
     def try_to_fill_area(self, tmp_cells, unit, pos):
-        if tmp_cells[pos.x][pos.y].owner != 0 or tmp_cells[pos.x][pos.y].owner != unit.owner:  # if enemy
-            return -1
-        else:
-            if tmp_cells[pos.x][pos.y].owner == unit.owner:  # mienk a cell
-                return 0
-                tmp_cells[pos.x][pos.y].owner = unit.owner
-            if (self.try_to_fill_area(tmp_cells, unit, Position(pos.x+1, pos.y)) == -1
-                or self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y-1)) == -1
-                or self.try_to_fill_area(tmp_cells, unit, Position(pos.x-1, pos.y)) == -1
-                or self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y+1)) == -1):
+        for enemy in self.enemies:
+            if enemy.position.x == pos.x and enemy.position.y == pos.y:  # if enemy
                 return -1
+
+        if tmp_cells[pos.x][pos.y].owner == self.owns:  # mienk a cell
             return 0
+        tmp_cells[pos.x][pos.y].owner = self.owns
+        tmp_cells[pos.x][pos.y].attack.unit = -1
+
+        if (self.try_to_fill_area(tmp_cells, unit, Position(pos.x+1, pos.y)) == -1
+            or self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y-1)) == -1
+            or self.try_to_fill_area(tmp_cells, unit, Position(pos.x-1, pos.y)) == -1
+            or self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y+1)) == -1):
+            return -1
+        return 0
 
     def receive(self):
         response = Response()
@@ -304,29 +329,29 @@ class TestEnvironment:
 
     def detect_collisions(self):
 
-        for enemy in self.enemies:
-            enemy_cell = self.cells[enemy.position.x][enemy.position.y]
-            # enemy collied with unit capturing line
-            if enemy_cell.owner == 0 and enemy_cell.attack.which() == "unit":
-                self.damage_unit(enemy_cell.attack.unit)
-
-            # enemy collied with unit
-            for unit_index in range(len(self.units)):
-                if self.units[unit_index].position.x == enemy.position.x and self.units[unit_index].position.y == enemy.position.y:
-                    self.damage_unit(unit_index)
-
-
         for unit_index in range(len(self.units)):
-
             # unit out of the map
             if not self.units[unit_index].position.x in range(79) or not self.units[unit_index].position.x in range(99):
                 self.damage_unit(unit_index)
                 continue
 
-            # unit collied with own capturing line
-            unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].position.y]
+            if self.units[unit_index].position.x in range(79) and self.units[unit_index].position.x in range(99):
+                # unit collied with own capturing line
+                unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].position.y]
+
             if unit_cell.attack.which() == "unit" and unit_cell.attack.unit == unit_index:
                 self.damage_unit(unit_index)
+
+        for enemy in self.enemies:
+            enemy_cell = self.cells[enemy.position.x][enemy.position.y]
+            # enemy collied with unit capturing line
+            # if enemy_cell.owner == 0 and enemy_cell.attack.which() == "unit":
+            #     self.damage_unit(enemy_cell.attack.unit)
+
+            # enemy collied with unit
+            for unit_index in range(len(self.units)):
+                if self.units[unit_index].position.x == enemy.position.x and self.units[unit_index].position.y == enemy.position.y:
+                    self.damage_unit(unit_index)
 
     def damage_unit(self, unit_index):
         self.units[unit_index].position.x = self.units[unit_index].startpos.x
@@ -335,19 +360,40 @@ class TestEnvironment:
         if self.units[unit_index].health > 0:
             self.units[unit_index].health -= 1
 
-    def update_cells(self):
-        pass
+    def is_level_finished(self):
+        number_of_owned_cells = 0
+        for cell_row in self.cells:
+            for cell in cell_row:
+                if cell.owner == 1:
+                    number_of_owned_cells += 1
+
+        if number_of_owned_cells/(80*100) > 0.75:
+            return True
+        else:
+            return False
+
+    def is_game_over(self):
+        dead_units = 0
+        for unit in self.units:
+            if unit.health == 0:
+                dead_units += 1
+
+        if dead_units == len(self.units):
+            return True
+        else:
+            return False
 
     def update(self, directions):
         self.tick = self.tick + 1
         self.move_units(directions)  # mozgat és a foglalást is figyeli!
-        # ez hiányzik
-        self.update_cells()
+
+        if self.is_level_finished():
+            self.init(self.level+1)
 
         self.move_enemies()
-        self.detect_collisions()
+        #self.detect_collisions()
 
-
-
-
-
+        if self.is_game_over():
+            return False
+        else:
+            return True
