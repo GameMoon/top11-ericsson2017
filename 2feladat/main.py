@@ -11,7 +11,7 @@ from env_helper_classes import *
 generator = OutputGenerator()
 # teszt környezet
 test_env = TestEnvironment()
-
+test_env.init(500)
 #interface.login()
 
 #test_env.send([interface.new_move(0, 'right')])
@@ -19,7 +19,7 @@ test_env = TestEnvironment()
 
 
 
-for i in range(100):
+for i in range(1000):
     response = test_env.receive()
     stateVector = generator.convert(response.cells, response.units, response.enemies)
     generator.show(stateVector)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from env_helper_classes import *
 import random
 
@@ -229,6 +228,13 @@ class TestEnvironment:
             # update enemy position
             self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x + horizontal_speed
             self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y + vertical_speed
+
+            new_cell = self.cells[new_x_pos][new_y_pos]
+
+            # collision with unit line
+            if new_cell.owner == 0 and new_cell.attack.which() == "unit":
+               self.units[new_cell.attack.unit].position = self.units[new_cell.attack.unit].startpos
+               self.units[new_cell.attack.unit].health -= 1
 
     def move_units(self, directions):
         which_unit = 0

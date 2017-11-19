@@ -22,8 +22,8 @@ class Cell:
         self.attack = Attack()
 
 class EnemyDir:
-    vertical: ""
-    horizontal: ""
+    vertical = ""
+    horizontal = ""
 
 class Enemy:
     position = None
