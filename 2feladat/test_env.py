@@ -315,6 +315,7 @@ class TestEnvironment:
                 if self.units[unit_index].position.x == enemy.position.x and self.units[unit_index].position.y == enemy.position.y:
                     self.damage_unit(unit_index)
 
+
         for unit_index in range(len(self.units)):
 
             # unit out of the map
@@ -323,7 +324,7 @@ class TestEnvironment:
                 continue
 
             # unit collied with own capturing line
-                unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].position.y]
+            unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].position.y]
             if unit_cell.attack.which() == "unit" and unit_cell.attack.unit == unit_index:
                 self.damage_unit(unit_index)
 
