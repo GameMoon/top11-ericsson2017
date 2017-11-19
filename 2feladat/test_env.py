@@ -71,8 +71,8 @@ class TestEnvironment:
         y = -1
         while not pos_is_free:
             pos_is_free = True
-            x = random.randint(1, 78)
-            y = random.randint(1, 98)
+            x = random.randint(2, 77)
+            y = random.randint(2, 97)
             for enemy in self.enemies:
                 if enemy.position.x == x and enemy.position.y == y:
                     pos_is_free = False
@@ -229,13 +229,6 @@ class TestEnvironment:
             self.enemies[enemyIndex].position.x = self.enemies[enemyIndex].position.x + horizontal_speed
             self.enemies[enemyIndex].position.y = self.enemies[enemyIndex].position.y + vertical_speed
 
-            new_cell = self.cells[new_x_pos][new_y_pos]
-
-            # collision with unit line
-            if new_cell.owner == 0 and new_cell.attack.which() == "unit":
-               self.units[new_cell.attack.unit].position = self.units[new_cell.attack.unit].startpos
-               self.units[new_cell.attack.unit].health -= 1
-
     def move_units(self, directions):
         which_unit = 0
         for dir in directions:
@@ -243,8 +236,9 @@ class TestEnvironment:
             which_unit += 1
 
     def move_unit(self, unit, direction):
-        unit.position.x = unit.position.x + direction.x
-        unit.position.y = unit.position.y + direction.y
+        if unit.health > 0:
+            unit.position.x = unit.position.x + direction.x
+            unit.position.y = unit.position.y + direction.y
 
     def receive(self):
         response = Response()
@@ -256,8 +250,50 @@ class TestEnvironment:
         response.enemies = self.enemies
         return response
 
-    def update(self):
+    def detect_collisions(self):
+
+        for enemy in self.enemies:
+            enemy_cell = self.cells[enemy.position.x][enemy.position.y]
+            # enemy collied with unit capturing line
+            if enemy.owner == 0 and enemy_cell.attack.which() == "unit":
+                self.damage_unit(enemy_cell.attack.unit)
+
+            # enemy collied with unit
+            for unit_index in range(self.units):
+                if self.units[unit_index].position.x == enemy.position.x and self.units[unit_index].position.y == enemy.position.y:
+                    self.damage_unit(unit_index)
+
+
+        for unit_index in range(self.units):
+
+            # unit out of the map
+            if not self.units[unit_index].position.x in range(79) or not self.units[unit_index].position.x in range(99):
+                self.damage_unit(unit_index)
+                continue
+
+            # unit collied with own capturing line
+            unit_cell = self.cells[self.units[unit_index].position.x][self.units[unit_index].posititon.y]
+            if unit_cell.attack.which() == "unit" and unit_cell.attack.unit == unit_index:
+                self.damage_unit(unit_index)
+
+
+    def damage_unit(self, unit_index):
+        self.units[unit_index].position = self.units[unit_index].startpos
+        self.units[unit_index].health -= 1
+
+    def update_cells(self):
+        pass
+
+    def update(self, directions):
         self.tick = self.tick + 1
+        self.move_units(directions)
+        # ez hiányzik
+        self.update_cells()
+
         self.move_enemies()
+        self.detect_collisions()
+
+
+
 
 
