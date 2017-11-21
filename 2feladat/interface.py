@@ -10,22 +10,14 @@ class CommunicationInterface:
 
     def __init__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.connect(("ecovpn.dyndns.org", 11224))
+        self.s.connect(("epb2017.dyndns.org", 11224))
 
     def send(self, command):
-        self.s.send(command.to_bytes())
+        self.s.send(command.to_bytes_packed())
 
     def receive(self):
-        read_bytes = b''
-        while True:
-            incoming_bytes = self.s.recv(2000)
-            read_bytes += incoming_bytes
-
-            try:
-                response = self.response_capnp.Response.from_bytes(read_bytes)
-                break
-            except:
-                pass
+        read_bytes = self.s.recv(2000000)
+        response = self.response_capnp.Response.from_bytes_packed(read_bytes)
         return response
 
     def login(self):
@@ -47,5 +39,3 @@ class CommunicationInterface:
         new_move.unit = unit_id
         new_move.direction = direction
         return new_move
-
-
