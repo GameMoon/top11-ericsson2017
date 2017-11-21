@@ -19,6 +19,7 @@ class TestEnvironment:
         self.tick = 0
         self.owns = 1
         self.cells = [None]*80
+        self.already_checked = [[False for x in range(100)] for y in range(80)]
 
         sys.setrecursionlimit(1000000)
 
@@ -141,7 +142,7 @@ class TestEnvironment:
         for i in range(int(self.level/500)+1):
             new_unit = Unit()
             new_unit.owner = 1
-            new_unit.position = self.get_free_unit_position()
+            new_unit.position = Position(0, 0)  #self.get_free_unit_position()
             new_unit.direction = self.get_random_unit_dir(new_unit.position)
             new_unit.startpos.x = new_unit.position.x
             new_unit.startpos.y = new_unit.position.y
@@ -254,10 +255,7 @@ class TestEnvironment:
 
     def move_unit(self, unit, direction):
         if unit.health > 0:
-            print("Direction: ", direction.x, direction.y)
-            print(unit.position.x + direction.x, unit.position.y + direction.y)
             if (unit.position.x + direction.x) in range(100) and (unit.position.y + direction.y) in range(80):  # TODO: this should be somewhere else
-                print(unit.position.x, unit.position.y)
                 if (self.cells[unit.position.x][unit.position.y].owner == self.owns and  # Own field TODO: self.owns -> unit.owner
                    #self.cells[unit.position.x + direction.x][unit.position.y + direction.y].owner == 0 # Empty
                    self.cells[unit.position.x + direction.x][unit.position.y + direction.y].attack.can):  # Attackable field
@@ -283,39 +281,45 @@ class TestEnvironment:
             self.cells[pos.x][pos.y].owner = self.owns
             self.cells[pos.x][pos.y].attack.unit = -1
 
+        # Ahhoz, hogy egy cell-t csak egyszer nézzünk meg:
+        for x in range(len(self.already_checked)):
+            for y in range(len(self.already_checked[x])):
+                if self.cells[x][y].owner == self.owns:
+                    self.already_checked[x][y] = True
+                else:
+                    self.already_checked[x][y] = False
+
+        for enemy in self.enemies:
+            enemy_pos = Position(enemy.position.y, enemy.position.x)
+            self.fill_area(unit, enemy_pos, is_enemy=True)
+
         while len(unit.conquer_trail) > 0:
             pos = unit.conquer_trail.pop()
 
-            # Try to fill neighbors
-            tmp_cells = deepcopy(self.cells)
-            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x+1, pos.y)) != -1:
-                self.cells = tmp_cells
-            tmp_cells = deepcopy(self.cells)
-            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x-1, pos.y)) != -1:
-                self.cells = tmp_cells
-            tmp_cells = deepcopy(self.cells)
-            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y+1)) != -1:
-                self.cells = tmp_cells
-            tmp_cells = deepcopy(self.cells)
-            if self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y-1)) != -1:
-                self.cells = tmp_cells
+            self.fill_area(unit, Position(pos.y+1, pos.x))
+            self.fill_area(unit, Position(pos.y-1, pos.x))
+            self.fill_area(unit, Position(pos.y, pos.x+1))
+            self.fill_area(unit, Position(pos.y, pos.x-1))
 
-    def try_to_fill_area(self, tmp_cells, unit, pos):
-        for enemy in self.enemies:
-            if enemy.position.x == pos.x and enemy.position.y == pos.y:  # if enemy
-                return -1
+    # https://mail.python.org/pipermail/image-sig/2005-September/003559.html
+    def fill_area(self, unit, pos, is_enemy=False):
+        if self.already_checked[pos.y][pos.x]:
+            return
+        edge = [(pos.x, pos.y)]
+        self.already_checked[pos.y][pos.x] = True
+        if not is_enemy:
+            self.cells[pos.y][pos.x].owner = self.owns  # mienk a cell
 
-        if tmp_cells[pos.x][pos.y].owner == self.owns:  # mienk a cell
-            return 0
-        tmp_cells[pos.x][pos.y].owner = self.owns
-        tmp_cells[pos.x][pos.y].attack.unit = -1
-
-        if (self.try_to_fill_area(tmp_cells, unit, Position(pos.x+1, pos.y)) == -1
-            or self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y-1)) == -1
-            or self.try_to_fill_area(tmp_cells, unit, Position(pos.x-1, pos.y)) == -1
-            or self.try_to_fill_area(tmp_cells, unit, Position(pos.x, pos.y+1)) == -1):
-            return -1
-        return 0
+        while edge:
+            newedge = []
+            for (x, y) in edge:
+                for (s, t) in ((x+1, y), (x-1, y), (x, y+1), (x, y-1)):
+                    if not self.already_checked[t][s]:
+                        self.already_checked[t][s] = True
+                        if not is_enemy:
+                            self.cells[t][s].owner = self.owns
+                        newedge.append((s, t))
+            edge = newedge
 
     def receive(self):
         response = Response()
