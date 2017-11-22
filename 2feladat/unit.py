@@ -84,8 +84,12 @@ class Unit:
         if self.health > 0:
             # TODO: this should be somewhere else
             if (self.position.x + direction.x) in range(100) and (self.position.y + direction.y) in range(80):
-                if (cells[self.position.x][self.position.y].owner == self.owner and  # Own field
-                    cells[self.position.x + direction.x][self.position.y + direction.y].attack.can): # Attackable field
+                # if (cells[self.position.x][self.position.y].owner == self.owner and  # Own field
+                #     cells[self.position.x + direction.x][self.position.y + direction.y].attack.can): # Attackable field
+                #     self.is_conquering = True
+
+                # állandoan húzza a vonalat
+                if (cells[self.position.x][self.position.y].attack.can): # Attackable field
                     self.is_conquering = True
 
             if (self.is_conquering and  # We are conquering this field
