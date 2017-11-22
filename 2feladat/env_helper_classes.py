@@ -21,32 +21,6 @@ class Cell:
     def __init__(self):
         self.attack = Attack()
 
-class EnemyDir:
-    vertical = ""
-    horizontal = ""
-
-class Enemy:
-    position = None
-    direction = None
-
-    def __init__(self):
-        self.position = Position()
-        self.direction = EnemyDir()
-
-class Unit:
-    owner = 0
-    startpos = None
-    position = None
-    direction = ""
-    health = 3
-    killer = 6
-    is_conquering = False
-    conquer_trail = []
-
-    def __init__(self):
-        self.position = Position()
-        self.startpos = Position()
-
 class Info:
     owns = 1
     level = 0
@@ -56,5 +30,5 @@ class Response:
     status = "status"
     info = Info
     cells = [Cell]
-    enemies = [Enemy]
-    units = [Unit]
+    enemies = []
+    units = []
