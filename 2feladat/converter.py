@@ -39,7 +39,6 @@ class OutputGenerator:
         tempindex = 0
 
         for index in range(len(output)):
-
             row[tempindex] = OutputGenerator.number2char(output[index])
 
             if tempindex == 99:
